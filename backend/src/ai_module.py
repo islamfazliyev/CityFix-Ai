@@ -4,7 +4,7 @@ from PIL import Image
 import json
 from dotenv import load_dotenv
 
-load_dotenv(dotenv_path="../config/.env")
+load_dotenv(dotenv_path="./config/.env")
 data = f"./data/data.json"
 API_KEY = os.getenv("GEMINI_API_KEY")
 

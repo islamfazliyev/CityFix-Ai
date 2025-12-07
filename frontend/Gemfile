@@ -1,0 +1,12 @@
+source 'https://rubygems.org'
+
+# Web Çatısı
+gem 'sinatra', '~> 2.1'
+gem 'sinatra-reloader', :group => :development
+
+# Veritabanı (SQLite + ORM)
+gem 'sqlite3'
+gem 'sinatra-activerecord'
+gem 'rake', '~> 13.0', '>= 13.0.6'
+gem 'activerecord'
+gem 'thin'

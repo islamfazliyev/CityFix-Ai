@@ -1,0 +1,7 @@
+# Rakefile
+
+# Uygulamanın çalışması için environment dosyasını yükler
+require './app' 
+
+# ActiveRecord Rake görevlerini yükler
+require 'sinatra/activerecord/rake'
