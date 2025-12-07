@@ -1,12 +1,16 @@
+import os
 from flask import Flask, jsonify, request
 from src.form_module import create_form, delete_form, get_form, submit_form
 from src.comments_module import create_comment, delete_comment
 from src.login_register_module import login, register
+from src.ai_module import add_ai_tags_to_data
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
 form = []
-
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 #forums
 
 #create
@@ -128,6 +132,49 @@ def api_register():
 
     return {"status": "error"}, 500
 
+#AI
+
+#TXT2TAG
+@app.route('/api/txt2tag', methods=['POST'])
+def define_tags():
+    temp_image_path = None 
+
+    try:
+        
+        if 'id' not in request.form or 'image' not in request.files:
+            return jsonify({"error": "Eksik form verisi: 'id' veya 'image' dosyası gerekli."}), 400
+
+        item_id = int(request.form['id'])
+        image_file = request.files['image']
+
+        filename = secure_filename(image_file.filename)
+        temp_image_path = os.path.join(UPLOAD_FOLDER, filename)
+        image_file.save(temp_image_path)
+
+        add_ai_tags_to_data(item_id, temp_image_path)
+        
+        return jsonify({
+            "message": f"Yapay zeka etiketleri başarıyla oluşturuldu ve ID {item_id} için eklendi.",
+            "id": item_id
+        }), 200
+
+    
+    except ValueError:
+        return jsonify({"error": "Geçersiz ID formatı veya veri yapısı hatası."}), 400
+    
+    except FileNotFoundError as e:
+        return jsonify({"error": f"Dosya hatası: {str(e)}"}), 404
+        
+    except KeyError as e:
+        return jsonify({"error": f"Veri bulunamadı: {str(e)}"}), 404
+        
+    except Exception as e:
+        print(f"Sunucu İç Hatası: {e}") 
+        return jsonify({"error": "Etiket oluşturma sırasında beklenmeyen bir sunucu hatası oluştu."}), 500
+    
+    finally:
+        if temp_image_path and os.path.exists(temp_image_path):
+            os.remove(temp_image_path)
 
 if __name__ == '__main__':
     app.run(debug=True)
