@@ -1,10 +1,14 @@
 from flask import Flask, jsonify, request
-from src.form_module import create_form, delete_form, get_form
+from src.form_module import create_form, delete_form, get_form, submit_form
+from src.comments_module import create_comment, delete_comment
 
 app = Flask(__name__)
 
 form = []
 
+#forums
+
+#create
 @app.route('/api/create_form/', methods=['POST'])
 def c_f():
     data = request.get_json()
@@ -13,11 +17,13 @@ def c_f():
     create_form(data['topic'], data['desc'], data.get('tags', []), form)
     return jsonify({"message": "Form kaydı başarıyla oluşturuldu"}), 201
 
+#get
 @app.route('/api/get_form/', methods=['GET'])
 def g_f():
     get = get_form()
     return get
 
+#submit
 @app.route('/api/delete_form/<int:target_id>', methods=['DELETE'])
 def d_f(target_id):
     body = request.get_json()
@@ -45,7 +51,39 @@ def d_f(target_id):
     else:
         return jsonify({"error": f"Form with id {target_id} not found"}), 404
 
+#delete
+@app.route('/api/submit_form/<int:target_id>', methods=['POST'])
+def s_f(target_id):
+    if submit_form(target_id):
+        return {"status": "success", "id": target_id}
+    else:
+        return {"status": "not_found", "id": target_id}, 404
+
+#comment
+
+#create
+@app.route('/api/create_comment/<int:target_id>', methods=['POST'])
+def c_c(target_id):
     
+    data = request.json
+    comment = data.get("comment")
+
+    if not comment:
+        return {"error": "comment required"}, 400
+
+    if create_comment(comment, target_id):
+        return {"status": "success", "id": target_id}
+    else:
+        return {"status": "not_found", "id": target_id}, 404
+
+#delete
+@app.route('/api/delete_comment/<int:forum_id>/<int:comment_id>', methods=['DELETE'])
+def del_c(forum_id, comment_id):
+    if delete_comment(forum_id, comment_id):
+        return {"status": "success", "deleted_comment": comment_id}
+    else:
+        return {"status": "not_found"}, 404
+
 
 if __name__ == '__main__':
     app.run(debug=True)
