@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from src.form_module import create_form, delete_form, get_form, submit_form
 from src.comments_module import create_comment, delete_comment
+from src.login_register_module import login, register
 
 app = Flask(__name__)
 
@@ -83,6 +84,49 @@ def del_c(forum_id, comment_id):
         return {"status": "success", "deleted_comment": comment_id}
     else:
         return {"status": "not_found"}, 404
+
+#Login/Register
+
+#login
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    data = request.json
+
+    tc = data.get("tc")
+    password = data.get("password")
+
+    if not tc or not password:
+        return {"error": "tc and password required"}, 400
+
+    result = login(tc, password)
+    return result
+
+#Register
+@app.route('/api/register', methods=['POST'])
+def api_register():
+    data_in = request.json
+
+    tc = data_in.get("tc")
+    name = data_in.get("name")
+    last_name = data_in.get("last_name")
+    phone_number = data_in.get("phone_number")
+    password = data_in.get("password")
+
+    if not all([tc, name, last_name, phone_number, password]):
+        return {"error": "all fields required"}, 400
+
+    result = register(tc, name, last_name, phone_number, password)
+
+    if result == "tc_exists":
+        return {"status": "tc_exists"}, 409
+
+    if result == "phone_exists":
+        return {"status": "phone_exists"}, 409
+
+    if result is True:
+        return {"status": "success"}, 201
+
+    return {"status": "error"}, 500
 
 
 if __name__ == '__main__':

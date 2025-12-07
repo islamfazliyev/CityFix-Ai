@@ -71,3 +71,45 @@ while True:
             print(f"Yanıt: {response.json()}")
         except:
             print("Sunucu JSON döndürmedi.")
+        
+    if cond == "login":
+        tc = input("TC: ")
+        pwd = input("Şifre: ")
+
+        url = "http://127.0.0.1:5000/api/login"
+        payload = {"tc": tc, "password": pwd}
+
+        response = requests.post(url, json=payload)
+
+        print("Status:", response.status_code)
+        print("Yanıt:", response.json())
+    
+    if cond == "reg":
+        print("Kayıt oluşturma")
+
+        tc = input("TC: ")
+        name = input("Ad: ")
+        last_name = input("Soyad: ")
+        phone = input("Telefon: ")
+        password = input("Şifre: ")
+
+        url = "http://127.0.0.1:5000/api/register"
+
+        payload = {
+            "tc": tc,
+            "name": name,
+            "last_name": last_name,
+            "phone_number": phone,
+            "password": password
+        }
+
+        response = requests.post(url, json=payload)
+
+        print(f"Status Kodu: {response.status_code}")
+
+        try:
+            print("Yanıt:", response.json())
+        except:
+            print("Sunucu JSON döndürmedi.")
+
+
