@@ -1,0 +1,179 @@
+<div class="glass-panel p-10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col gap-6 w-[400px] relative overflow-hidden">
+    
+    <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/20 rounded-full blur-2xl pointer-events-none -mr-10 -mt-10"></div>
+
+    <div id="login-section" class="flex flex-col gap-5 transition-all duration-300">
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-white tracking-wide">Giriş Yap</h1>
+            <p class="text-gray-400 text-sm mt-1">Sisteme tekrar hoş geldiniz</p>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-cyan-400 uppercase tracking-wider ml-1">T.C. Kimlik No</label>
+            <input type="text" id="login_tc"
+                   class="input-dark w-full p-3 rounded-xl focus:ring-2 focus:ring-cyan-500 transition text-white" 
+                   placeholder="12345678901" maxlength="11">
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-cyan-400 uppercase tracking-wider ml-1">Şifre</label>
+            <input type="password" id="login_pass"
+                   class="input-dark w-full p-3 rounded-xl focus:ring-2 focus:ring-cyan-500 transition text-white" 
+                   placeholder="••••••••">
+        </div>
+
+        <button onclick="handleLogin()" 
+                class="btn btn-primary w-full py-3 rounded-xl font-bold text-lg shadow-lg mt-2">
+            GİRİŞ YAP
+        </button>
+
+        <div class="text-center mt-2">
+            <span class="text-gray-400 text-sm">Hesabınız yok mu?</span>
+            <button onclick="toggleForm('register')" class="text-cyan-400 font-bold hover:text-cyan-300 ml-1 underline transition">
+                Kayıt Ol
+            </button>
+        </div>
+        <p id="login-msg" class="text-center text-sm min-h-[20px]"></p>
+    </div>
+
+
+    <div id="register-section" class="hidden flex flex-col gap-4 transition-all duration-300">
+        <div class="text-center mb-2">
+            <h1 class="text-3xl font-bold text-white tracking-wide">Kayıt Ol</h1>
+            <p class="text-gray-400 text-sm mt-1">Aramıza katılın</p>
+        </div>
+
+        <div class="flex gap-3">
+            <div class="flex flex-col gap-1 w-1/2">
+                <label class="text-xs font-bold text-cyan-400 ml-1">Ad</label>
+                <input type="text" id="reg_name" class="input-dark w-full p-3 rounded-xl text-sm" placeholder="Ahmet">
+            </div>
+            <div class="flex flex-col gap-1 w-1/2">
+                <label class="text-xs font-bold text-cyan-400 ml-1">Soyad</label>
+                <input type="text" id="reg_lastname" class="input-dark w-full p-3 rounded-xl text-sm" placeholder="Yılmaz">
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold text-cyan-400 ml-1">T.C. Kimlik No</label>
+            <input type="text" id="reg_tc" class="input-dark w-full p-3 rounded-xl text-sm" placeholder="11 Haneli TC" maxlength="11">
+        </div>
+
+        <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold text-cyan-400 ml-1">Telefon</label>
+            <input type="text" id="reg_phone" class="input-dark w-full p-3 rounded-xl text-sm" placeholder="05XX XXX XX XX">
+        </div>
+
+        <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold text-cyan-400 ml-1">Şifre</label>
+            <input type="password" id="reg_pass" class="input-dark w-full p-3 rounded-xl text-sm" placeholder="••••••••">
+        </div>
+
+        <button onclick="handleRegister()" 
+                class="btn btn-primary w-full py-3 rounded-xl font-bold text-lg shadow-lg mt-2">
+            KAYIT OL
+        </button>
+
+        <div class="text-center mt-1">
+            <span class="text-gray-400 text-sm">Zaten hesabınız var mı?</span>
+            <button onclick="toggleForm('login')" class="text-cyan-400 font-bold hover:text-cyan-300 ml-1 underline transition">
+                Giriş Yap
+            </button>
+        </div>
+        <p id="reg-msg" class="text-center text-sm min-h-[20px]"></p>
+    </div>
+
+</div>
+
+<script>
+    const loginSection = document.getElementById("login-section");
+    const registerSection = document.getElementById("register-section");
+
+    function toggleForm(target) {
+        if (target === 'register') {
+            loginSection.classList.add("hidden");
+            registerSection.classList.remove("hidden");
+        } else {
+            registerSection.classList.add("hidden");
+            loginSection.classList.remove("hidden");
+        }
+    }
+
+    // --- LOGİN İŞLEMİ ---
+    async function handleLogin() {
+        const tc = document.getElementById("login_tc").value;
+        const pass = document.getElementById("login_pass").value;
+        const msg = document.getElementById("login-msg");
+
+        if(!tc || !pass) {
+            msg.textContent = "Alanları doldurunuz.";
+            msg.className = "text-center text-sm text-red-400";
+            return;
+        }
+
+        try {
+            const res = await fetch("http://127.0.0.1:5000/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tc: tc, password: pass })
+            });
+            const data = await res.json();
+
+            if (data.status === "success") {
+                msg.textContent = "Giriş Başarılı!";
+                msg.className = "text-center text-sm text-green-400";
+                setTimeout(() => window.location.href = "/", 1000);
+            } else {
+                msg.textContent = "Hatalı TC veya Şifre";
+                msg.className = "text-center text-sm text-red-400";
+            }
+        } catch (err) {
+            console.error(err);
+            msg.textContent = "Sunucu hatası";
+            msg.className = "text-center text-sm text-red-400";
+        }
+    }
+
+    // --- REGİSTER İŞLEMİ ---
+    async function handleRegister() {
+        const name = document.getElementById("reg_name").value;
+        const lastname = document.getElementById("reg_lastname").value;
+        const tc = document.getElementById("reg_tc").value;
+        const phone = document.getElementById("reg_phone").value;
+        const pass = document.getElementById("reg_pass").value;
+        const msg = document.getElementById("reg-msg");
+
+        if(!name || !lastname || !tc || !phone || !pass) {
+            msg.textContent = "Tüm alanları doldurunuz.";
+            msg.className = "text-center text-sm text-red-400";
+            return;
+        }
+
+        try {
+            const res = await fetch("http://127.0.0.1:5000/api/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    tc: tc, name: name, last_name: lastname, 
+                    phone_number: phone, password: pass 
+                })
+            });
+            const data = await res.json();
+
+            if (data.status === "success") {
+                msg.textContent = "Kayıt Başarılı! Girişe yönlendiriliyorsunuz...";
+                msg.className = "text-center text-sm text-green-400";
+                setTimeout(() => toggleForm('login'), 2000);
+            } else if (data.status === "tc_exists") {
+                msg.textContent = "Bu TC zaten kayıtlı.";
+                msg.className = "text-center text-sm text-yellow-400";
+            } else {
+                msg.textContent = "Kayıt başarısız.";
+                msg.className = "text-center text-sm text-red-400";
+            }
+        } catch (err) {
+            console.error(err);
+            msg.textContent = "Sunucu hatası";
+        }
+    }
+</script>

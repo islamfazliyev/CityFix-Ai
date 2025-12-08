@@ -1,0 +1,30 @@
+<nav class="navbar">
+    <div class="logo">
+        <i class="fa-solid fa-cube logo-icon"></i>
+        <span>CityFix <span class="highlight">AI</span></span>
+    </div>
+    
+    <ul class="nav-links">
+        <li><a href="/">Ana Sayfa</a></li>
+        <li><a href="/forums">Forumlar</a></li>
+        <li><a href="/login"><b>Giriş yap</b></a></li>
+        </ul>
+
+    <a href="/create_forum" class="btn btn-outline">
+        <i class="fa-solid fa-plus mr-2"></i> Sorun Bildir
+    </a>
+</nav>
+
+<script>
+  function navigate(route) {
+    if (route == "mainmenu") {
+      window.location.href = "/";
+    }
+    if (route == "forums") {
+      window.location.href = "/forums";
+    }
+    if (route == "createForums") {
+      window.location.href = "/create_forum";
+    }
+  }
+</script>

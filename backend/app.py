@@ -1,26 +1,58 @@
 import os
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from src.form_module import create_form, delete_form, get_form, submit_form
 from src.comments_module import create_comment, delete_comment
 from src.login_register_module import login, register
 from src.ai_module import add_ai_tags_to_data
 from werkzeug.utils import secure_filename
+from flask_cors import CORS
+
 
 app = Flask(__name__)
+
+CORS(app, supports_credentials=True)
 
 form = []
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 #forums
-
+data = f"./data/data.json"
 #create
+
 @app.route('/api/create_form/', methods=['POST'])
 def c_f():
-    data = request.get_json()
-    if not data or 'topic' not in data or 'desc' not in data:
-        return jsonify({"error": "Eksik veya yanlış formatta veri gönderildi (id, topic, desc zorunludur)."}), 400
-    create_form(data['topic'], data['desc'], data.get('tags', []), form)
-    return jsonify({"message": "Form kaydı başarıyla oluşturuldu"}), 201
+    if 'image' not in request.files:
+        return jsonify({"error": "Resim dosyası gerekli"}), 400
+
+    image = request.files['image']
+    topic = request.form.get('topic')
+    desc = request.form.get('desc')
+    
+    manual_tags = [] 
+
+    if not topic or not desc:
+        return jsonify({"error": "topic ve desc zorunludur"}), 400
+
+    filename = secure_filename(image.filename)
+    image_path = os.path.join(UPLOAD_FOLDER, filename)
+    image.save(image_path)
+
+    created_id = create_form(
+        image_filename=filename, 
+        topic=topic, 
+        description=desc, 
+        tags=manual_tags
+    )
+
+    if created_id:
+        try:
+
+            add_ai_tags_to_data(created_id, image_path)
+        except Exception as e:
+            print(f"AI Tag hatası: {e}")
+            
+    return jsonify({"message": "Form başarıyla oluşturuldu", "id": created_id}), 201
+
 
 #get
 @app.route('/api/get_form/', methods=['GET'])
@@ -28,21 +60,14 @@ def g_f():
     get = get_form()
     return get
 
-#submit
+#delete
 @app.route('/api/delete_form/<int:target_id>', methods=['DELETE'])
 def d_f(target_id):
-    body = request.get_json()
-
-    if not body or "id" not in body:
-        return jsonify({"error": "id missing"}), 400
-    
-    target_id = body["id"]
-
     try:
         current_form_data = get_form()
     except FileNotFoundError:
         return jsonify({"error": "No forms found to delete from."}), 404
-    except json.JSONDecodeError:
+    except Exception:
         return jsonify({"error": "Data file is corrupted or empty."}), 500
 
     initial_length = len(current_form_data)
@@ -56,7 +81,7 @@ def d_f(target_id):
     else:
         return jsonify({"error": f"Form with id {target_id} not found"}), 404
 
-#delete
+#submit
 @app.route('/api/submit_form/<int:target_id>', methods=['POST'])
 def s_f(target_id):
     if submit_form(target_id):
@@ -175,6 +200,10 @@ def define_tags():
     finally:
         if temp_image_path and os.path.exists(temp_image_path):
             os.remove(temp_image_path)
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 if __name__ == '__main__':
     app.run(debug=True)

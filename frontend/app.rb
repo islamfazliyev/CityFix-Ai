@@ -3,15 +3,26 @@ require 'sinatra'
 require 'sinatra/reloader' if development?
 require 'sinatra/activerecord'
 
-# configure SQlite database
-set :database, { adapter: "sqlite3", database: "db/app.db" }
-
-# For installing models (if we say we have models)
-require_relative 'models/task'
 
 # Route to handle the root path
 
 get '/' do
-  "hello world!"
+  erb :index
 end
 
+
+get '/forum_detail' do
+  erb :forum_detail
+end
+
+get '/create_forum' do
+  erb :create_forum
+end
+
+get '/forums' do
+  erb :forums
+end
+
+get '/login' do
+  erb :login_register
+end

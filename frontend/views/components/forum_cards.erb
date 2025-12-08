@@ -1,0 +1,99 @@
+<div id="forum-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-6 max-w-7xl mx-auto">
+    <div class="col-span-full text-center text-cyan-500 animate-pulse mt-10">
+        Veriler yükleniyor...
+    </div>
+</div>
+
+<script>
+    const API_URL = "http://127.0.0.1:5000/api/get_form/";
+    const IMAGE_BASE_URL = "http://127.0.0.1:5000/uploads/"; 
+
+    async function loadForums() {
+        const container = document.getElementById("forum-container");
+        
+        try {
+            const res = await fetch(API_URL);
+            if (!res.ok) throw new Error("Veri çekilemedi");
+            let data = await res.json();
+            data = data.reverse();
+
+            if (data.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-full mt-10">Henüz hiç kayıt yok.</p>`;
+                return;
+            }
+            container.innerHTML = data.map(item => renderCard(item)).join("");
+        } catch (err) {
+            console.error(err);
+            container.innerHTML = `<p class="text-center text-red-400 mt-10">Veriler yüklenirken hata oluştu!</p>`;
+        }
+    }
+
+    function renderCard(item) {
+        // Tag stilini güncelledik (Neon Cyan)
+        const tagsHtml = item.tags && item.tags.length > 0 
+            ? item.tags.map(tag => `
+                <span class="tag-badge px-2 py-1 rounded text-xs font-semibold">
+                    #${tag}
+                </span>
+              `).join("")
+            : '<span class="text-xs text-gray-500">Etiket yok</span>';
+
+        const imageUrl = item.image 
+            ? `${IMAGE_BASE_URL}${item.image}` 
+            : 'https://via.placeholder.com/400x200?text=No+Image';
+
+        // Yeni CSS sınıfları (forum-card) kullanıldı
+        return `
+        <div onclick="window.location.href='/forum_detail?id=${item.id}'" 
+             class="forum-card rounded-2xl overflow-hidden flex flex-col h-full group cursor-pointer relative">
+            
+            <div class="h-48 w-full overflow-hidden relative">
+                <img src="${imageUrl}" 
+                     alt="${item.topic}" 
+                     class="w-full h-full object-cover transition duration-500 group-hover:scale-110 opacity-80 group-hover:opacity-100"
+                     onerror="this.src='https://via.placeholder.com/400x200?text=Hata';">
+                
+                <div class="absolute top-2 right-2 bg-black/60 text-cyan-400 text-xs px-2 py-1 rounded border border-cyan-400/30 backdrop-blur-md">
+                    #${item.id}
+                </div>
+            </div>
+
+            <div class="p-6 flex flex-col flex-grow gap-3">
+                
+                <h2 class="text-xl font-bold text-white line-clamp-1 group-hover:text-cyan-400 transition" title="${item.topic}">
+                    ${item.topic}
+                </h2>
+                
+                <p class="text-gray-400 text-sm line-clamp-3 flex-grow font-light">
+                    ${item.description}
+                </p>
+
+                <div class="flex flex-wrap gap-2 mt-2 pt-3 border-t border-white/10">
+                    ${tagsHtml}
+                </div>
+                
+                <div class="flex justify-between items-center mt-3 pt-2">
+                     <button onclick="event.stopPropagation(); deleteForum(${item.id})" 
+                             class="text-red-400/70 hover:text-red-400 text-sm transition hover:scale-105">
+                        <i class="fa-solid fa-trash"></i> Sil
+                    </button>
+                    <span class="text-xs text-gray-500 flex items-center gap-1">
+                        <i class="fa-regular fa-comment"></i> ${item.comments ? item.comments.length : 0}
+                    </span>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
+    async function deleteForum(id) {
+        if(!confirm("Bu kaydı silmek istediğine emin misin?")) return;
+        try {
+            const res = await fetch(`http://127.0.0.1:5000/api/delete_form/${id}`, { method: "DELETE" });
+            if (res.ok) { loadForums(); } 
+            else { alert("Silinemedi."); }
+        } catch (e) { console.error(e); }
+    }
+
+    loadForums();
+</script>

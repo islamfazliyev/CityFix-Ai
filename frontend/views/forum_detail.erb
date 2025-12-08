@@ -1,0 +1,187 @@
+<div id="nav">
+    <%= erb :'components/navbar' %>
+</div>
+
+<div class="glass-panel max-w-5xl mx-auto mt-10 p-8 rounded-2xl shadow-2xl mb-20 relative overflow-hidden">
+    
+    <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+
+    <div id="loading" class="text-center py-20 text-cyan-400 animate-pulse text-xl font-medium">
+        Veriler yükleniyor...
+    </div>
+
+    <div id="content-area" class="hidden flex flex-col gap-8 relative z-10">
+        
+        <div class="flex flex-col md:flex-row gap-8">
+            <div class="w-full md:w-1/2 h-[350px] rounded-xl overflow-hidden border border-white/10 shadow-lg group">
+                <img id="detail-image" src="" class="w-full h-full object-cover transition duration-700 group-hover:scale-110" alt="Forum Resmi">
+            </div>
+
+            <div class="w-full md:w-1/2 flex flex-col justify-center gap-4">
+                <h1 id="detail-title" class="text-4xl font-bold text-white text-glow leading-tight"></h1>
+                
+                <div id="detail-tags" class="flex gap-2 flex-wrap"></div>
+                
+                <div class="text-gray-400 text-sm mt-2 flex items-center gap-2">
+                    <i class="fa-regular fa-clock text-cyan-400"></i>
+                    <span>ID: #<span id="detail-id"></span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="desc-box" id="detail-desc">
+            </div>
+
+        <hr class="border-white/10 my-2">
+
+        <div class="flex flex-col gap-6">
+            <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+                <i class="fa-regular fa-comments text-cyan-400"></i> 
+                Yorumlar 
+                <span id="comment-count" class="text-sm font-bold text-black bg-cyan-400 px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(0,242,255,0.6)]">0</span>
+            </h3>
+
+            <div id="comments-list" class="flex flex-col gap-4 max-h-[500px] overflow-y-auto pr-2 custom-scroll">
+                <p class="text-gray-500 italic text-center py-4">Henüz yorum yok. İlk yorumu sen yap!</p>
+            </div>
+
+            <div class="flex flex-col gap-4 mt-4 bg-black/20 p-6 rounded-xl border border-white/5">
+                <textarea id="new-comment" rows="3" 
+                    class="input-dark w-full p-4 rounded-xl resize-none text-sm"
+                    placeholder="Bu konu hakkında düşüncelerin neler?"></textarea>
+                
+                <div class="flex justify-between items-center">
+                    <p id="comment-msg" class="text-sm font-medium"></p>
+                    <button id="send-comment-btn" 
+                        class="btn btn-primary px-8 py-2 rounded-lg text-sm font-bold tracking-wide">
+                        GÖNDER
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const FORUM_ID = urlParams.get('id');
+
+    const API_URL = "http://127.0.0.1:5000/api/get_form/";
+    const COMMENT_API = "http://127.0.0.1:5000/api/create_comment/";
+    const IMAGE_BASE_URL = "http://127.0.0.1:5000/uploads/";
+
+    async function loadDetail() {
+        if (!FORUM_ID) {
+            document.getElementById("loading").textContent = "Hata: Geçersiz ID";
+            return;
+        }
+
+        try {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            const item = data.find(f => f.id == FORUM_ID);
+
+            if (!item) {
+                document.getElementById("loading").textContent = "İçerik bulunamadı.";
+                return;
+            }
+
+            renderContent(item);
+            renderComments(item.comments || [], item.id);
+
+        } catch (e) {
+            console.error(e);
+            document.getElementById("loading").textContent = "Bağlantı hatası!";
+        }
+    }
+
+    function renderContent(item) {
+        document.getElementById("loading").classList.add("hidden");
+        document.getElementById("content-area").classList.remove("hidden");
+
+        const imgUrl = item.image ? IMAGE_BASE_URL + item.image : "https://via.placeholder.com/800x400?text=No+Image";
+        document.getElementById("detail-image").src = imgUrl;
+
+        document.getElementById("detail-title").textContent = item.topic;
+        document.getElementById("detail-desc").textContent = item.description;
+        document.getElementById("detail-id").textContent = item.id;
+
+        const tagContainer = document.getElementById("detail-tags");
+        tagContainer.innerHTML = item.tags.map(tag => 
+            `<span class="tag-badge px-3 py-1 rounded text-sm font-semibold border border-cyan-500/30 text-cyan-400 bg-cyan-900/20">#${tag}</span>`
+        ).join("");
+    }
+
+    function renderComments(comments, forumId) {
+        const list = document.getElementById("comments-list");
+        document.getElementById("comment-count").textContent = comments.length;
+
+        if (comments.length === 0) {
+            list.innerHTML = `<div class="text-center py-6 opacity-50"><i class="fa-regular fa-comment-dots text-4xl mb-2"></i><br>Sessizlik hakim...</div>`;
+            return;
+        }
+
+        list.innerHTML = comments.map(c => `
+            <div class="comment-card p-4 rounded-xl flex gap-4 group relative">
+                <div class="comment-avatar w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                
+                <div class="flex flex-col gap-1 w-full">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs text-cyan-400 font-medium">Kullanıcı #${c.id}</span>
+                        
+                        <button onclick="deleteComment(${forumId}, ${c.id})" 
+                            class="text-gray-500 hover:text-red-400 transition opacity-0 group-hover:opacity-100 px-2">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                    <p class="text-gray-200 text-sm leading-relaxed">${c.text}</p>
+                </div>
+            </div>
+        `).join("");
+    }
+
+    document.getElementById("send-comment-btn").addEventListener("click", async () => {
+        const txt = document.getElementById("new-comment").value.trim();
+        const msg = document.getElementById("comment-msg");
+        
+        if (!txt) return;
+
+        msg.textContent = "Gönderiliyor...";
+        msg.className = "text-yellow-400 animate-pulse";
+
+        try {
+            const res = await fetch(COMMENT_API + FORUM_ID, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ comment: txt })
+            });
+
+            if (res.ok) {
+                msg.textContent = "Yorum eklendi!";
+                msg.className = "text-green-400";
+                document.getElementById("new-comment").value = "";
+                setTimeout(() => msg.textContent = "", 2000);
+                loadDetail(); 
+            } else {
+                msg.textContent = "Hata oluştu.";
+                msg.className = "text-red-400";
+            }
+        } catch (e) {
+            console.error(e);
+            msg.textContent = "Bağlantı hatası.";
+            msg.className = "text-red-400";
+        }
+    });
+
+    async function deleteComment(forumId, commentId) {
+        if(!confirm("Yorumu silmek istiyor musun?")) return;
+        try {
+            const res = await fetch(`http://127.0.0.1:5000/api/delete_comment/${forumId}/${commentId}`, { method: "DELETE" });
+            if(res.ok) loadDetail();
+        } catch(e) { console.error(e); }
+    }
+
+    loadDetail();
+</script>

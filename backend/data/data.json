@@ -1,80 +1,20 @@
 [
     {
-        "id": 78474,
-        "topic": "test",
-        "description": "yeni veri",
+        "id": 91010,
+        "image": "sample2.jpg",
+        "topic": "Yollar çatlamış",
+        "description": "ısparta tarafında yol çatlamış",
         "tags": [
-            "python"
+            "bozukyol",
+            "hasarlıasfalt",
+            "çatlakyol"
         ],
-        "comments": [],
-        "submit": false
-    },
-    {
-        "id": 50391,
-        "topic": "test",
-        "description": "yeni veri",
-        "tags": [
-            "python"
+        "comments": [
+            {
+                "id": 71188,
+                "text": "selam"
+            }
         ],
-        "comments": [],
-        "submit": false
-    },
-    {
-        "id": 28396,
-        "topic": "test",
-        "description": "yeni veri",
-        "tags": [
-            "python"
-        ],
-        "comments": [],
-        "submit": false
-    },
-    {
-        "id": 52154,
-        "topic": "test",
-        "description": "yeni veri",
-        "tags": [
-            "python"
-        ],
-        "comments": [],
-        "submit": false
-    },
-    {
-        "id": 34891,
-        "topic": "test",
-        "description": "yeni veri",
-        "tags": [
-            "python"
-        ],
-        "comments": [],
-        "submit": false
-    },
-    {
-        "id": 90592,
-        "topic": "test",
-        "description": "yeni veri",
-        "tags": [
-            "python"
-        ],
-        "comments": [],
-        "submit": false
-    },
-    {
-        "id": 3,
-        "topic": "test",
-        "description": "yeni veri",
-        "tags": [
-            
-        ],
-        "comments": [],
-        "submit": false
-    },
-    {
-        "id": 28448,
-        "topic": "test",
-        "description": "yeni veri",
-        "tags": [],
-        "comments": [],
         "submit": false
     }
 ]

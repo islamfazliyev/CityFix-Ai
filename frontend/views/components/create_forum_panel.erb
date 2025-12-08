@@ -1,0 +1,113 @@
+
+<div id="create"
+     class="glass-panel p-10 rounded-2xl
+            flex flex-col items-center gap-8 w-[450px] mx-auto mt-20 mb-20">
+
+    <h2 class="text-2xl font-bold text-white tracking-wide border-b border-gray-700 pb-2 w-full text-center">
+        Sorun Bildir
+    </h2>
+
+    <div id="image_uploader"
+         class="upload-area rounded-xl w-[220px] h-[220px] 
+                flex items-center justify-center cursor-pointer relative overflow-hidden" 
+         onclick="openImagePicker()">
+
+        <input id="image_input" type="file" accept="image/*" capture="environment" class="hidden">
+
+        <div id="upload_placeholder" class="text-center p-4">
+            <i class="fa-solid fa-camera text-4xl text-cyan-400 mb-3 block"></i>
+            <p class="text-gray-400 font-medium text-sm">Resim Yükle</p>
+        </div>
+    </div>
+
+    <div id="creator" class="flex flex-col gap-5 w-full items-center">
+
+        <input id="topic"
+               type="text"
+               class="input-dark w-[350px] p-4 rounded-xl text-sm"
+               placeholder="Konu başlığı giriniz...">
+
+        <textarea id="description" cols="30" rows="5"
+                  class="input-dark w-[350px] p-4 rounded-xl resize-none text-sm"
+                  placeholder="Detaylı açıklama yazınız..."></textarea>
+
+        <button id="submitBtn" 
+                class="btn btn-primary w-[350px] rounded-xl font-bold tracking-wide">
+            OLUŞTUR
+        </button>
+
+        <p id="msg" class="text-center text-sm font-medium min-h-[20px] text-cyan-400"></p>
+
+    </div>
+</div>
+
+<script>
+    /* JS KODLARINDA HİÇBİR MANTIK DEĞİŞİKLİĞİ YOK, AYNEN ÇALIŞIR */
+    const imageInput = document.getElementById("image_input");
+    const uploader = document.getElementById("image_uploader");
+    const uploadPlaceholder = document.getElementById("upload_placeholder");
+
+    function openImagePicker() {
+        imageInput.click();
+    }
+
+    imageInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        uploader.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.className = "w-full h-full object-cover rounded-xl opacity-90 hover:opacity-100 transition";
+        uploader.appendChild(img);
+    });
+
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+        const msg = document.getElementById("msg");
+        const topic = document.getElementById("topic").value.trim();
+        const description = document.getElementById("description").value.trim();
+        const imageFile = imageInput.files[0];
+
+        if (!topic || !description || !imageFile) {
+            msg.textContent = "Lütfen tüm alanları doldurun!";
+            msg.className = "text-center text-sm text-red-400 font-bold";
+            return;
+        }
+
+        msg.textContent = "AI Analiz Ediyor... 🤖";
+        msg.className = "text-center text-sm text-cyan-400 animate-pulse";
+        
+        const btn = document.getElementById("submitBtn");
+        btn.disabled = true;
+        btn.classList.add("opacity-50", "cursor-not-allowed");
+
+        const formData = new FormData();
+        formData.append("image", imageFile);
+        formData.append("topic", topic);
+        formData.append("desc", description);
+
+        try {
+            const res = await fetch("http://127.0.0.1:5000/api/create_form/", {
+                method: "POST",
+                body: formData
+            });
+            const data = await res.json();
+
+            if (res.status === 201) {
+                msg.textContent = "Başarılı! Yönlendiriliyorsunuz...";
+                msg.className = "text-center text-sm text-green-400 font-bold";
+                setTimeout(() => { window.location.href = "/forums"; }, 2000); // Forum listesine atalım
+            } else {
+                msg.textContent = "Hata: " + (data.error || "Sunucu hatası");
+                msg.className = "text-center text-sm text-red-400";
+                btn.disabled = false;
+                btn.classList.remove("opacity-50", "cursor-not-allowed");
+            }
+        } catch (err) {
+            msg.textContent = "Bağlantı hatası!";
+            console.error(err);
+            btn.disabled = false;
+            btn.classList.remove("opacity-50", "cursor-not-allowed");
+        }
+    });
+</script>
